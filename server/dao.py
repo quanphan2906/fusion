@@ -41,3 +41,12 @@ def save_text_to_db(texts):
 
     # Save embeddings to Pinecone
     _save_embeddings_to_pinecone(texts, embeddings)
+
+
+def process_text_input(texts):
+    # Generate embeddings
+    embeddings = _generate_embeddings(texts)
+    result = index.query(queries=[embeddings], top_k=5)
+    # Print results
+    for match in result['matches']:
+        print(f"ID: {match['id']}, Score: {match['score']}, Text: {texts[int(match['id'])]}")

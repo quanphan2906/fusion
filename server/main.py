@@ -11,7 +11,7 @@ app = Flask(__name__)
 CORS(app)
 
 
-# This function will run when user saves the note and want to process the text.
+# This function will run when user wants to process the text.
 @app.route("/process_text", methods=["POST"])
 def process_text():
     data = request.get_json()
@@ -21,6 +21,17 @@ def process_text():
         return jsonify({}), 200
     else:
         return jsonify({"message": "No text provided"}), 400
+
+# This function will run when user saves the note, note is saved in db.
+@app.route("/save_text", methods=["POST"])
+def save_text():
+    data = request.get_json()
+    if data:
+        process_text_input(data)
+        return jsonify({}), 200
+    else:
+        return jsonify({"message": "No text provided"}), 400
+
 
 
 if __name__ == "__main__":
