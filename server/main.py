@@ -114,6 +114,16 @@ def delete():
         # Return a response
         return {"message": type(e)}
 
+# This function will run when user saves the note and want to process the text.
+@app.route('/process_text', methods=['POST'])
+def process_text():
+    data = request.get_json()
+    if 'text' in data:
+        text = data['text']
+        processed_text = dao.save_text_to_db()  # Example processing
+        return jsonify({'original_text': text, 'processed_text': processed_text}), 200
+    else:
+        return jsonify({'message': 'No text provided'}), 400
 
 if __name__ == "__main__":
     # debug=True will rerun the code whenever a change is made.
