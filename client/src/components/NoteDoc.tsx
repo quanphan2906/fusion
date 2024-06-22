@@ -1,18 +1,17 @@
 "use client"
 import TextareaAutoSize from "react-textarea-autosize";
 import Editor from "./Editor";
-
 import dynamic from 'next/dynamic';
-
-// Use dynamic import with `ssr: false`
-const DynamicEditor = dynamic(() => import('./Editor'), {
-    ssr: false,
-});
+import { useMemo } from "react";
 
 export default function NoteDoc() {
+    const Editor = useMemo(
+        () => dynamic(() => import('./Editor'), {ssr: false}),
+        []
+    );
 
     const handleChange = () => {
-        // Your onChange logic
+        // osnChange logic
     };
 
     const initialContent = '[{"type":"paragraph","children":[{"text":"Hello, world!"}]}]';
@@ -25,7 +24,7 @@ export default function NoteDoc() {
                     className="w-full resize-none appearance-none overflow-hidden bg-transparent text-5xl font-bold focus:outline-none"
                 />
             </div>
-            <DynamicEditor
+            <Editor
                 onChange={handleChange}
                 initialContent={initialContent}
                 editable={true}

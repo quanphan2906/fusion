@@ -2,7 +2,7 @@ import { BlockNoteEditor, PartialBlock } from "@blocknote/core";
 import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/core/fonts/inter.css";
-import "@blocknote/react/style.css";
+import "@blocknote/mantine/style.css";
 import { FC } from "react";
 
 interface EditorProps {
@@ -23,12 +23,14 @@ const Editor: FC<EditorProps> = ({
     });
 
     return (
-        <BlockNoteView
+        <div className="-mx-[-48px] my-4">
+            <BlockNoteView
             editor={editor}
             editable={editable}
             theme='light'
             onChange={onChange}
         />
+        </div>
     );
 };
 
