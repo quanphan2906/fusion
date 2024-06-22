@@ -1,8 +1,9 @@
 import json
 import uuid
 
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask_cors import CORS
+from dao import save_text_to_db
 
 app = Flask(__name__)
 
@@ -114,16 +115,18 @@ def delete():
         # Return a response
         return {"message": type(e)}
 
+
 # This function will run when user saves the note and want to process the text.
-@app.route('/process_text', methods=['POST'])
+@app.route("/process_text", methods=["POST"])
 def process_text():
     data = request.get_json()
-    if 'text' in data:
-        text = data['text']
-        processed_text = dao.save_text_to_db()  # Example processing
-        return jsonify({'original_text': text, 'processed_text': processed_text}), 200
+    if "texts" in data:
+        texts = data["texts"]
+        save_text_to_db(texts)
+        return jsonify({}), 200
     else:
-        return jsonify({'message': 'No text provided'}), 400
+        return jsonify({"message": "No text provided"}), 400
+
 
 if __name__ == "__main__":
     # debug=True will rerun the code whenever a change is made.
