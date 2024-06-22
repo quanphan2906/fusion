@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from dao import save_text_to_db
+from dao import save_text_to_db, query_similar_texts
 
 app = Flask(__name__)
 
@@ -8,7 +8,7 @@ app = Flask(__name__)
 CORS(app)
 
 
-# This function will run when user saves the note and want to process the text.
+# This function will run when user wants to process the text.
 @app.route("/process_text", methods=["POST"])
 def process_text():
     data = request.get_json()
@@ -16,6 +16,18 @@ def process_text():
         texts = data["texts"]
         save_text_to_db(texts)
         return jsonify({}), 200
+    else:
+        return jsonify({"message": "No text provided"}), 400
+
+
+# This function will run when user saves the note, note is saved in db.
+@app.route("/query_text", methods=["POST"])
+def save_text():
+    data = request.get_json()
+    text = data.get("text", None)
+    if text:
+        similar_text = query_similar_texts(text)
+        return jsonify({"result": similar_text}), 200
     else:
         return jsonify({"message": "No text provided"}), 400
 

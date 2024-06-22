@@ -10,7 +10,7 @@ embedding_pipeline = pipeline(
 
 
 # Function to generate embeddings
-def _generate_embeddings(texts):
+def _generate_embeddings(texts: list[str]):
     embeddings = [np.mean(embedding_pipeline(text)[0], axis=0) for text in texts]
     return embeddings
 
@@ -39,3 +39,10 @@ def save_text_to_db(texts):
 
     # Save embeddings to Pinecone
     _save_embeddings_to_pinecone(texts, embeddings)
+
+
+def query_similar_texts(text: str, top_k=5):
+    embeddings = _generate_embeddings([text])
+    results = index.query(queries=[embeddings], top_k=top_k)
+    similar_texts = [match["metadata"]["text"] for match in results["matches"]]
+    return similar_texts
