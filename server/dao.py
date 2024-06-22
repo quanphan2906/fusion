@@ -1,5 +1,5 @@
 import numpy as np
-from pinecone.grpc import PineconeGRPC as Pinecone
+from pinecone import Pinecone
 from transformers import pipeline
 from load_env import pinecone_api_key
 
@@ -21,8 +21,6 @@ pinecone = Pinecone(api_key=pinecone_api_key)
 
 # Create or connect to an index
 index_name = "text-similarity"
-if index_name not in pinecone.list_indexes():
-    pinecone.create_index(index_name, dimension=384, metric="cosine")
 index = pinecone.Index(index_name)
 
 

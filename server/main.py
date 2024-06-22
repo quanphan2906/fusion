@@ -1,6 +1,3 @@
-import json
-import uuid
-
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dao import save_text_to_db
