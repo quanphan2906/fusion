@@ -1,6 +1,7 @@
 import numpy as np
-import pinecone
+from pinecone.grpc import PineconeGRPC as Pinecone
 from transformers import pipeline
+from load_env import pinecone_api_key
 
 # Initialize the text embedding model
 embedding_pipeline = pipeline(
@@ -9,23 +10,24 @@ embedding_pipeline = pipeline(
 
 
 # Function to generate embeddings
-def generate_embeddings(texts):
+def _generate_embeddings(texts):
     embeddings = [np.mean(embedding_pipeline(text)[0], axis=0) for text in texts]
     return embeddings
 
 
 # Initialize Pinecone
-pinecone.init(api_key="your-pinecone-api-key", environment="your-pinecone-environment")
+pinecone = Pinecone(api_key=pinecone_api_key)
+
 
 # Create or connect to an index
-index_name = "your-index-name"
+index_name = "text-similarity"
 if index_name not in pinecone.list_indexes():
     pinecone.create_index(index_name, dimension=384, metric="cosine")
 index = pinecone.Index(index_name)
 
 
 # Function to save embeddings to Pinecone
-def save_embeddings_to_pinecone(texts, embeddings):
+def _save_embeddings_to_pinecone(texts, embeddings):
     items = [
         {"id": str(i), "values": embedding.tolist(), "metadata": {"text": text}}
         for i, (text, embedding) in enumerate(zip(texts, embeddings))
@@ -35,7 +37,7 @@ def save_embeddings_to_pinecone(texts, embeddings):
 
 def save_text_to_db(texts):
     # Generate embeddings
-    embeddings = generate_embeddings(texts)
+    embeddings = _generate_embeddings(texts)
 
     # Save embeddings to Pinecone
-    save_embeddings_to_pinecone(texts, embeddings)
+    _save_embeddings_to_pinecone(texts, embeddings)
