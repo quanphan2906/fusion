@@ -2,7 +2,7 @@
 "use client";
 import TextareaAutoSize from "react-textarea-autosize";
 import dynamic from 'next/dynamic';
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Block } from "@blocknote/core";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "../../firebaseConfig";
@@ -12,11 +12,12 @@ import { useDebounce } from "@uidotdev/usehooks";
 interface NoteDocProps {
     noteId: string;
     onTitleChange: (title: string) => void;
+    onContentChange: (content: string) => void;
     initialTitle: string;
     initialContent: string;
 }
 
-export default function NoteDoc({ noteId, onTitleChange, initialTitle, initialContent }: NoteDocProps) {
+export default function NoteDoc({ noteId, onTitleChange, onContentChange, initialTitle, initialContent }: NoteDocProps) {
     const [title, setTitle] = useState(initialTitle);
     const [content, setContent] = useState<Block[]>([]);
     const debouncedTitle = useDebounce(title, 3000);
@@ -26,6 +27,36 @@ export default function NoteDoc({ noteId, onTitleChange, initialTitle, initialCo
         () => dynamic(() => import('./Editor'), { ssr: false }),
         []
     );
+
+    const extractTextFromBlocks = (blocks: Block[]): string[] => {
+        const texts: string[] = [];
+        
+        const traverseBlocks = (block: Block) => {
+            if (block.content && Array.isArray(block.content)) {
+                texts.push(...block.content.map((item) => {
+                    if ((item as any).type === 'text') {
+                        return (item as any).text;
+                    } else if ((item as any).type === 'link') {
+                        return (item as any).content.map((subItem: any) => subItem.text).join(' ');
+                    }
+                    return '';
+                }).join(' '));
+            }
+            if (block.content && (block.content as any).type === 'tableContent') {
+                (block.content as any).rows.forEach((row: any) => {
+                    row.cells.forEach((cell: any) => {
+                        texts.push(cell.map((item: any) => item.text).join(' '));
+                    });
+                });
+            }
+            if (block.children) {
+                block.children.forEach(traverseBlocks);
+            }
+        };
+
+        blocks.forEach(traverseBlocks);
+        return texts;
+    };
 
     const handlePostRequest = async (title: string, jsonBlocks: Block[]) => {
         const texts = extractTextFromBlocks(jsonBlocks);
@@ -40,26 +71,6 @@ export default function NoteDoc({ noteId, onTitleChange, initialTitle, initialCo
         }
     };
 
-    const extractTextFromBlocks = (blocks: Block[]): string[] => {
-        const texts: string[] = [];
-
-        blocks.forEach(block => {
-            if (block.type === 'paragraph' || block.type === 'heading') {
-                if (block.content) {
-                    const textContent = block.content.map(item => {
-                        if (item.type === 'text') {
-                            return item.text;
-                        }
-                        return '';
-                    }).join(' ');
-                    texts.push(textContent);
-                }
-            }
-        });
-
-        return texts;
-    };
-
     useEffect(() => {
         if (debouncedContent.length > 0 || debouncedTitle) {
             handlePostRequest(debouncedTitle, debouncedContent);
@@ -72,15 +83,21 @@ export default function NoteDoc({ noteId, onTitleChange, initialTitle, initialCo
         try {
             setContent(jsonBlocks);
             await setDoc(getNoteDocRef(noteId), { title, content: jsonBlocks });
+            onContentChange(JSON.stringify(jsonBlocks)); // Notify TabsComponent about the change
         } catch (e) {
             console.error("Error saving document: ", e);
         }
     };
 
-    const handleTitleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const handleTitleChange = async (event: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newTitle = event.target.value;
         setTitle(newTitle);
         onTitleChange(newTitle);
+        try {
+            await setDoc(getNoteDocRef(noteId), { title: newTitle, content });
+        } catch (e) {
+            console.error("Error saving title: ", e);
+        }
     };
 
     return (
