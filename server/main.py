@@ -25,7 +25,7 @@ def upsert_doc():
     """
     This function is used for two purposes: updating title and updating the content.
 
-    However, it should only be used whenever the doc has content. If the doc only has title, even when the title was changed by the user, don't call this function. In fact, don't call the backend at all.
+    However, it should only be used when the doc has content. If the doc only has title, even when the title was changed by the user, don't call this function. In fact, don't call the backend at all. So when a new doc is created with only title, don't call this function. Only call when there starts to be content.
 
     When the doc has title and content, when:
     - the title changes, pass in old_title and new_title, leave new_blocks undefined
