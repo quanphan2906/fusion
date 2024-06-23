@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from dao import save_text_to_db, query_similar_texts
+import dao
 
 app = Flask(__name__)
 
@@ -18,7 +18,7 @@ def process_text():
     titles = [title for i in range(len(texts))]
 
     if title and texts:
-        save_text_to_db(titles, texts)
+        dao.save_text_to_db(titles, texts)
         return jsonify({}), 200
     else:
         return jsonify({"message": "No text provided"}), 400
@@ -30,10 +30,27 @@ def save_text():
     data = request.get_json()
     text = data.get("text", None)
     if text:
-        similar_text = query_similar_texts(text)
+        similar_text = dao.query_similar_texts(text)
         return jsonify({"result": similar_text}), 200
     else:
         return jsonify({"message": "No text provided"}), 400
+
+
+@app.route("/update-doc", methods=["POST"])
+def update_doc():
+    data = request.get_json()
+    old_title = data.get("old_title")
+    new_title = data.get("new_title")
+    new_blocks = data.get("new_blocks")
+
+    if old_title is None:
+        return jsonify({"message": "old_title is required"}), 400
+
+    try:
+        res = dao.update_doc(old_title, new_title, new_blocks)
+        return jsonify({res}), 200
+    except Exception as e:
+        return jsonify({"message": e}), 400
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@ import uuid
 from pinecone import Pinecone
 from transformers import pipeline
 from load_env import pinecone_api_key
+from typing import Union
 
 # Initialize the text embedding model
 embedding_pipeline = pipeline(
@@ -58,8 +59,17 @@ def query_similar_texts(text: str, top_k=5):
     return similar_texts
 
 
-def update_doc(old_title: str, new_title: str = None, new_blocks: list[str] = []):
-    # Query the Pinecone index
+def update_doc(
+    old_title: str, new_title: str = None, new_blocks: Union[list[str], None] = []
+):
+    if old_title is None:
+        return
+
+    # there's nothing to update
+    if new_title is None and (new_blocks is None or len(new_blocks) == 0):
+        return
+
+    # Hacky way to query with metadata only
     # https://community.pinecone.io/t/is-there-a-way-to-query-all-the-vectors-and-or-metadata-from-a-namespace/797/7
     results = index.query(
         vector=[0 for _ in range(VECTOR_DIMENSIONS)],
@@ -68,13 +78,13 @@ def update_doc(old_title: str, new_title: str = None, new_blocks: list[str] = []
         filter={"title": old_title},
     )
 
-    ids_to_delete = [match["id"] for match in results["matches"]]
-
-    if len(ids_to_delete) == 0:
+    if len(results["matches"]) == 0:
         return
 
-    # only title changes, blocks don't change
-    if new_title and len(new_blocks) == 0:
+    # if only the title was changed
+    # we want to upsert the title of the blocks instead of
+    # deleting the blocks and creating new ones
+    if new_blocks is None or len(new_blocks) == 0:
         items = [
             {
                 "id": match["id"],
@@ -84,8 +94,10 @@ def update_doc(old_title: str, new_title: str = None, new_blocks: list[str] = []
             for match in results["matches"]
         ]
         index.upsert(items)
+        return
 
     # the blocks changed, so we have to delete the old blocks and create new ones
+    ids_to_delete = [match["id"] for match in results["matches"]]
     index.delete(ids=ids_to_delete)
 
     if new_title and new_blocks:
