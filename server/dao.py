@@ -103,3 +103,18 @@ def update_doc(
     if new_title and new_blocks:
         titles = [new_title] * len(new_blocks)
         save_text_to_db(titles, new_blocks)
+
+
+def delete_doc(title: Union[str, None]):
+    if title is None:
+        return
+
+    results = index.query(
+        vector=[0 for _ in range(VECTOR_DIMENSIONS)],
+        top_k=DUMMY_TOPK_TO_QUERY_WITH_METADATA,
+        include_metadata=True,
+        filter={"title": title},
+    )
+
+    ids_to_delete = [match["id"] for match in results["matches"]]
+    index.delete(ids=ids_to_delete)

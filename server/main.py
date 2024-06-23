@@ -53,6 +53,18 @@ def update_doc():
         return jsonify({"message": e}), 400
 
 
+@app.route("/delete-doc", methods=["POST"])
+def delete_doc():
+    data = request.json()
+    title = data.get("title")
+
+    try:
+        dao.delete_doc(title)
+        return jsonify({}), 200
+    except Exception as e:
+        return jsonify({"message": e}), 400
+
+
 if __name__ == "__main__":
     # debug=True will rerun the code whenever a change is made.
     app.run(debug=True)
