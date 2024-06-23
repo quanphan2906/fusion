@@ -1,4 +1,4 @@
-import { db } from "../firebaseConfig";
+import { db } from "../../firebaseConfig";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { Block } from "@blocknote/core";
 

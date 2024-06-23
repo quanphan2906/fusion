@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, Tab, IconButton, Box } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
@@ -6,18 +6,36 @@ import MenuIcon from '@mui/icons-material/Menu';
 import NoteDoc from './NoteDoc';
 import TabPanel from './TabPanel';
 import DrawerComponent from './DrawerComponent';
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../../firebaseConfig";
 
 const TabsComponent: React.FC = () => {
-  const [tabs, setTabs] = useState([{ id: 0, title: 'Untitled' }]);
+  const [tabs, setTabs] = useState<{ id: number, title: string, content: string }[]>([]);
   const [value, setValue] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchNotes = async () => {
+      const querySnapshot = await getDocs(collection(db, "notes"));
+      const notes = querySnapshot.docs.map((doc, index) => ({
+        id: index,
+        title: doc.data().title || 'Untitled',
+        content: JSON.stringify(doc.data().content),
+      }));
+      setTabs(notes);
+      setLoading(false);
+    };
+
+    fetchNotes();
+  }, []);
 
   const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
     setValue(newValue);
   };
 
   const handleAddTab = () => {
-    const newTab = { id: tabs.length, title: `Untitled` };
+    const newTab = { id: tabs.length, title: `Untitled`, content: '' };
     setTabs([...tabs, newTab]);
     setValue(tabs.length);
   };
@@ -39,6 +57,10 @@ const TabsComponent: React.FC = () => {
     );
     setTabs(newTabs);
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="w-full">
@@ -75,7 +97,12 @@ const TabsComponent: React.FC = () => {
       </Box>
       {tabs.map((tab, index) => (
         <TabPanel key={tab.id} value={value} index={index}>
-          <NoteDoc noteId={`note-${tab.id}`} onTitleChange={(title) => handleTitleChange(index, title)} />
+          <NoteDoc
+            noteId={`note-${tab.id}`}
+            onTitleChange={(title) => handleTitleChange(index, title)}
+            initialTitle={tab.title}
+            initialContent={tab.content}
+          />
         </TabPanel>
       ))}
       <DrawerComponent open={drawerOpen} onClose={() => toggleDrawer(false)} />

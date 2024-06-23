@@ -5,16 +5,20 @@ import dynamic from 'next/dynamic';
 import { useMemo } from "react";
 import { Block } from "@blocknote/core";
 import { doc, setDoc } from "firebase/firestore";
-import { db } from "../firebaseConfig";
+import { db } from "../../firebaseConfig";
+import { useState } from "react";
 
 
 interface NoteDocProps {
     noteId: string;
     onTitleChange: (title: string) => void;
+    initialTitle: string;
+    initialContent: string;
 }
 
+export default function NoteDoc({ noteId, onTitleChange, initialTitle, initialContent }: NoteDocProps) {
+    const [title, setTitle] = useState(initialTitle);
 
-export default function NoteDoc({ noteId, onTitleChange }: NoteDocProps) {
     const Editor = useMemo(
         () => dynamic(() => import('./Editor'), {ssr: false}),
         []
@@ -24,17 +28,17 @@ export default function NoteDoc({ noteId, onTitleChange }: NoteDocProps) {
 
     const handleChange = async (jsonBlocks: Block[]) => {
         try {
-            await setDoc(getNoteDocRef(noteId), { content: jsonBlocks });
+            await setDoc(getNoteDocRef(noteId), { title, content: jsonBlocks });
         } catch (e) {
             console.error("Error saving document: ", e);
         }
     };
 
     const handleTitleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-        onTitleChange(event.target.value);
+        const newTitle = event.target.value;
+        setTitle(newTitle);
+        onTitleChange(newTitle);
     };
-
-    const initialContent = '[{"type":"paragraph","children":[{"text":"Hello, world!"}]}]';
 
     return (
         <main className="min-h-screen">
@@ -42,6 +46,7 @@ export default function NoteDoc({ noteId, onTitleChange }: NoteDocProps) {
                 <TextareaAutoSize
                     placeholder="Untitled"
                     className="w-full resize-none appearance-none overflow-hidden bg-transparent text-5xl font-bold focus:outline-none"
+                    value={title}
                     onChange={handleTitleChange}
                 />
             </div>
