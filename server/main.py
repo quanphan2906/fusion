@@ -8,22 +8,6 @@ app = Flask(__name__)
 CORS(app)
 
 
-# This function will run when user wants to process the text.
-@app.route("/process_text", methods=["POST"])
-def process_text():
-    data = request.get_json()
-    title = data.get("title", None)
-    texts = data.get("texts", None)
-
-    titles = [title for i in range(len(texts))]
-
-    if title and texts:
-        dao.save_text_to_db(titles, texts)
-        return jsonify({}), 200
-    else:
-        return jsonify({"message": "No text provided"}), 400
-
-
 # This function will run when user saves the note, note is saved in db.
 @app.route("/query_text", methods=["POST"])
 def save_text():
@@ -36,8 +20,18 @@ def save_text():
         return jsonify({"message": "No text provided"}), 400
 
 
-@app.route("/update-doc", methods=["POST"])
-def update_doc():
+@app.route("/upsert-doc", methods=["POST"])
+def upsert_doc():
+    """
+    This function is used for two purposes: updating title and updating the content.
+
+    However, it should only be used whenever the doc has content. If the doc only has title, even when the title was changed by the user, don't call this function. In fact, don't call the backend at all.
+
+    When the doc has title and content, when:
+    - the title changes, pass in old_title and new_title, leave new_blocks undefined
+    - the content changes, pass in old_title and new_blocks, leave new_title undefined
+    - both title and content change, pass in old_title, new_title, and new_blocks
+    """
     data = request.get_json()
     old_title = data.get("old_title")
     new_title = data.get("new_title")
@@ -47,7 +41,7 @@ def update_doc():
         return jsonify({"message": "old_title is required"}), 400
 
     try:
-        res = dao.update_doc(old_title, new_title, new_blocks)
+        res = dao.upsert_doc(old_title, new_title, new_blocks)
         return jsonify({res}), 200
     except Exception as e:
         return jsonify({"message": e}), 400

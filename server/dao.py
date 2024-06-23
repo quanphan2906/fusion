@@ -5,27 +5,22 @@ from transformers import pipeline
 from load_env import pinecone_api_key
 from typing import Union
 
+pinecone = Pinecone(api_key=pinecone_api_key)
+VECTOR_DIMENSIONS = 384
+DUMMY_TOPK_TO_QUERY_WITH_METADATA = 10000
+INDEX_NAME = "text-similarity"
+index = pinecone.Index(INDEX_NAME)
+
 # Initialize the text embedding model
-embedding_pipeline = pipeline(
+_embedding_pipeline = pipeline(
     "feature-extraction", model="sentence-transformers/all-MiniLM-L6-v2"
 )
 
 
 # Function to generate embeddings
 def _generate_embeddings(texts: list[str]):
-    embeddings = [np.mean(embedding_pipeline(text)[0], axis=0) for text in texts]
+    embeddings = [np.mean(_embedding_pipeline(text)[0], axis=0) for text in texts]
     return embeddings
-
-
-# Initialize Pinecone
-pinecone = Pinecone(api_key=pinecone_api_key)
-VECTOR_DIMENSIONS = 384
-DUMMY_TOPK_TO_QUERY_WITH_METADATA = 10000
-
-
-# Create or connect to an index
-index_name = "text-similarity"
-index = pinecone.Index(index_name)
 
 
 # Function to save embeddings to Pinecone
@@ -59,7 +54,7 @@ def query_similar_texts(text: str, top_k=5):
     return similar_texts
 
 
-def update_doc(
+def upsert_doc(
     old_title: str, new_title: str = None, new_blocks: Union[list[str], None] = []
 ):
     if old_title is None:
