@@ -1,4 +1,5 @@
 import numpy as np
+import uuid
 from pinecone import Pinecone
 from transformers import pipeline
 from load_env import pinecone_api_key
@@ -28,11 +29,11 @@ index = pinecone.Index(index_name)
 def _save_embeddings_to_pinecone(titles, texts, embeddings):
     items = [
         {
-            "id": str(i),
+            "id": uuid.uuid4(),
             "values": embedding.tolist(),
             "metadata": {"text": text, "title": title},
         }
-        for i, (title, text, embedding) in enumerate(zip(titles, texts, embeddings))
+        for (title, text, embedding) in zip(titles, texts, embeddings)
     ]
     index.upsert(items)
 
