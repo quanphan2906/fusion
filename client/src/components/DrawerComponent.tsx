@@ -4,6 +4,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import SearchIcon from '@mui/icons-material/Search';
 import InfoIcon from '@mui/icons-material/Info';
 import CloseIcon from '@mui/icons-material/Close';
+import Link from 'next/link';
 
 interface DrawerComponentProps {
   open: boolean;
@@ -18,24 +19,30 @@ const DrawerComponent: React.FC<DrawerComponentProps> = ({ open, onClose }) => {
         sx={{ width: '20vw', display: 'flex', flexDirection: 'column', height: '100%' }}
       >
         <List>
-          <ListItemButton>
-            <ListItemIcon>
-              <HomeIcon />
-            </ListItemIcon>
-            <ListItemText primary="Home" />
-          </ListItemButton>
-          <ListItemButton>
-            <ListItemIcon>
-              <SearchIcon />
-            </ListItemIcon>
-            <ListItemText primary="Search" />
-          </ListItemButton>
-          <ListItemButton>
-            <ListItemIcon>
-              <InfoIcon />
-            </ListItemIcon>
-            <ListItemText primary="Info" />
-          </ListItemButton>
+          <Link href="/" passHref>
+            <ListItemButton component="a">
+              <ListItemIcon>
+                <HomeIcon />
+              </ListItemIcon>
+              <ListItemText primary="Home" />
+            </ListItemButton>
+          </Link>
+          <Link href="/search" passHref>
+            <ListItemButton component="a">
+              <ListItemIcon>
+                <SearchIcon />
+              </ListItemIcon>
+              <ListItemText primary="Search" />
+            </ListItemButton>
+          </Link>
+          <Link href="/info" passHref>
+            <ListItemButton component="a">
+              <ListItemIcon>
+                <InfoIcon />
+              </ListItemIcon>
+              <ListItemText primary="Info" />
+            </ListItemButton>
+          </Link>
         </List>
         <Box sx={{ flexGrow: 1 }} /> 
         <Box p={2}>
