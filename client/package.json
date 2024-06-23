@@ -17,6 +17,7 @@
     "@mui/icons-material": "^5.15.20",
     "@mui/material": "^5.15.20",
     "@types/firebase": "^3.2.1",
+    "@uidotdev/usehooks": "^2.4.1",
     "@uploadthing/react": "^6.6.0",
     "axios": "^1.7.2",
     "dotenv": "^16.4.5",

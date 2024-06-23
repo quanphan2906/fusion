@@ -1,13 +1,13 @@
-"use client"
+/* eslint-disable react-hooks/exhaustive-deps */
+"use client";
 import TextareaAutoSize from "react-textarea-autosize";
-import Editor from "./Editor";
 import dynamic from 'next/dynamic';
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { Block } from "@blocknote/core";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "../../firebaseConfig";
-import { useRef } from "react";
 import axios from "axios";
+import { useDebounce } from "@uidotdev/usehooks";
 
 interface NoteDocProps {
     noteId: string;
@@ -18,19 +18,21 @@ interface NoteDocProps {
 
 export default function NoteDoc({ noteId, onTitleChange, initialTitle, initialContent }: NoteDocProps) {
     const [title, setTitle] = useState(initialTitle);
-    const [lastChangeTime, setLastChangeTime] = useState(Date.now());
-    const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+    const [content, setContent] = useState<Block[]>([]);
+    const debouncedTitle = useDebounce(title, 3000);
+    const debouncedContent = useDebounce(content, 3000);
 
     const Editor = useMemo(
-        () => dynamic(() => import('./Editor'), {ssr: false}),
+        () => dynamic(() => import('./Editor'), { ssr: false }),
         []
     );
 
     const handlePostRequest = async (title: string, jsonBlocks: Block[]) => {
+        const texts = extractTextFromBlocks(jsonBlocks);
         try {
-            const response = await axios.post("http://localhost:5000/process_text", {
+            const response = await axios.post("http://127.0.0.1:5000/process_text", {
                 title: title,
-                texts: jsonBlocks
+                texts: texts
             });
             console.log(response.data);
         } catch (e) {
@@ -38,24 +40,37 @@ export default function NoteDoc({ noteId, onTitleChange, initialTitle, initialCo
         }
     };
 
-    const debounce = (func: Function, delay: number) => {
-        return (...args: any[]) => {
-            if (debounceTimeout.current) {
-                clearTimeout(debounceTimeout.current);
+    const extractTextFromBlocks = (blocks: Block[]): string[] => {
+        const texts: string[] = [];
+
+        blocks.forEach(block => {
+            if (block.type === 'paragraph' || block.type === 'heading') {
+                if (block.content) {
+                    const textContent = block.content.map(item => {
+                        if (item.type === 'text') {
+                            return item.text;
+                        }
+                        return '';
+                    }).join(' ');
+                    texts.push(textContent);
+                }
             }
-            debounceTimeout.current = setTimeout(() => {
-                func(...args);
-            }, delay);
-        };
+        });
+
+        return texts;
     };
 
-    const debouncedPostRequest = useMemo(() => debounce(handlePostRequest, 3000), []);
+    useEffect(() => {
+        if (debouncedContent.length > 0 || debouncedTitle) {
+            handlePostRequest(debouncedTitle, debouncedContent);
+        }
+    }, [debouncedContent, debouncedTitle]);
 
     const getNoteDocRef = (noteId: string) => doc(db, "notes", noteId);
 
     const handleChange = async (jsonBlocks: Block[]) => {
         try {
-            setLastChangeTime(Date.now());
+            setContent(jsonBlocks);
             await setDoc(getNoteDocRef(noteId), { title, content: jsonBlocks });
         } catch (e) {
             console.error("Error saving document: ", e);
@@ -65,7 +80,6 @@ export default function NoteDoc({ noteId, onTitleChange, initialTitle, initialCo
     const handleTitleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newTitle = event.target.value;
         setTitle(newTitle);
-        setLastChangeTime(Date.now());
         onTitleChange(newTitle);
     };
 
