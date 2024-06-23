@@ -18,6 +18,7 @@ import { Block } from "@blocknote/core";
 
 export interface TabData {
 	id: string;
+	sourceTitle: string;
 	title: string;
 	content: Block[];
 }
@@ -38,6 +39,7 @@ const TabsComponent = ({ setSuggestions }: TabsComponentProps) => {
 		const querySnapshot = await getDocs(collection(db, "notes"));
 		const notes = querySnapshot.docs.map((doc) => ({
 			id: doc.id,
+			sourceTitle: doc.data().title || "Untitled",
 			title: doc.data().title || "Untitled",
 			content: doc.data().content as Block[],
 		}));
@@ -50,7 +52,10 @@ const TabsComponent = ({ setSuggestions }: TabsComponentProps) => {
 		fetchNotes();
 	}, []);
 
-	const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
+	const handleOpenTabChange = (
+		event: React.ChangeEvent<{}>,
+		newValue: number
+	) => {
 		setValue(newValue);
 		if (!openTabs.includes(newValue)) {
 			setOpenTabs([...openTabs, newValue]);
@@ -125,7 +130,7 @@ const TabsComponent = ({ setSuggestions }: TabsComponentProps) => {
 				</IconButton>
 				<Tabs
 					value={value}
-					onChange={handleChange}
+					onChange={handleOpenTabChange}
 					aria-label="NoteDoc Tabs"
 				>
 					{openTabs.map((index) => (
@@ -177,8 +182,9 @@ const TabsComponent = ({ setSuggestions }: TabsComponentProps) => {
 							onContentChange={(content) =>
 								handleContentChange(index, content)
 							}
-							initialTitle={tab.title}
-							initialContent={tab.content}
+							sourceTitle={tab.sourceTitle}
+							title={tab.title}
+							content={tab.content}
 							setSuggestions={setSuggestions}
 						/>
 					</TabPanel>

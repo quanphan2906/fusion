@@ -16,8 +16,9 @@ interface NoteDocProps {
 	noteId: string;
 	onTitleChange: (title: string) => void;
 	onContentChange: (content: Block[]) => void;
-	initialTitle: string;
-	initialContent: Block[];
+	sourceTitle: string;
+	title: string;
+	content: Block[];
 	setSuggestions: React.Dispatch<React.SetStateAction<String[]>>;
 }
 
@@ -36,13 +37,14 @@ export default function NoteDoc({
 	noteId,
 	onTitleChange,
 	onContentChange,
-	initialTitle,
-	initialContent,
+	sourceTitle,
+	title,
+	content,
 	setSuggestions,
 }: NoteDocProps) {
-	const debouncedTitle = useDebounce(initialTitle, 3000);
-	const debouncedContent = useDebounce(initialContent, 3000);
-	const [hasContent, setHasContent] = useState(!!initialContent);
+	const debouncedTitle = useDebounce(title, 3000);
+	const debouncedContent = useDebounce(content, 3000);
+	const [hasContent, setHasContent] = useState(!!content);
 
 	const Editor = useMemo(
 		() => dynamic(() => import("./Editor"), { ssr: false }),
@@ -50,7 +52,7 @@ export default function NoteDoc({
 	);
 
 	const editor: BlockNoteEditor = useCreateBlockNote({
-		initialContent: initialContent || [defaultBlock],
+		initialContent: content || [defaultBlock],
 	});
 
 	const extractTextFromBlocks = (blocks: Block[]): string => {
@@ -101,7 +103,6 @@ export default function NoteDoc({
 	};
 
 	const handlePostRequest = async (
-		oldTitle: string,
 		newTitle?: string,
 		newBlocks?: Block[]
 	) => {
@@ -112,7 +113,7 @@ export default function NoteDoc({
 			const response = await axios.post(
 				"http://127.0.0.1:5000/upsert-doc",
 				{
-					old_title: oldTitle,
+					old_title: sourceTitle,
 					new_title: newTitle,
 					new_blocks: newBlocksText,
 				}
@@ -129,7 +130,7 @@ export default function NoteDoc({
 			const response = await axios.post(
 				"http://127.0.0.1:5000/query_text",
 				{
-					title: initialTitle,
+					title: sourceTitle,
 					text: currentBlock,
 				}
 			);
@@ -147,14 +148,13 @@ export default function NoteDoc({
 
 	useEffect(() => {
 		if (hasContent) {
-			if (debouncedTitle !== initialTitle) {
+			if (debouncedTitle !== title) {
 				handlePostRequest(
-					initialTitle,
 					debouncedTitle,
 					debouncedContent.length ? debouncedContent : undefined
 				);
 			} else if (debouncedContent.length > 0) {
-				handlePostRequest(initialTitle, undefined, debouncedContent);
+				handlePostRequest(undefined, debouncedContent);
 			}
 		}
 	}, [debouncedContent, debouncedTitle]);
@@ -165,7 +165,7 @@ export default function NoteDoc({
 		try {
 			setHasContent(jsonBlocks.length > 0);
 			await setDoc(getNoteDocRef(noteId), {
-				initialTitle,
+				title,
 				content: jsonBlocks,
 			});
 			onContentChange(jsonBlocks); // Notify TabsComponent about the change
@@ -182,7 +182,7 @@ export default function NoteDoc({
 		try {
 			await setDoc(getNoteDocRef(noteId), {
 				title: newTitle,
-				content: JSON.stringify(initialContent),
+				content: JSON.stringify(content),
 			});
 		} catch (e) {
 			console.error("Error saving title: ", e);
@@ -196,7 +196,7 @@ export default function NoteDoc({
 					<TextareaAutoSize
 						placeholder="Untitled"
 						className="w-full resize-none appearance-none overflow-hidden bg-transparent text-5xl font-bold focus:outline-none"
-						value={initialTitle}
+						value={title}
 						onChange={handleTitleChange}
 					/>
 				</div>
