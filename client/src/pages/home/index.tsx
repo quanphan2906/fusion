@@ -7,7 +7,7 @@ import 'tailwindcss/tailwind.css'; // Ensure Tailwind CSS is imported
 const Home: React.FC = () => {
 
   return (
-    <div className="h-screen overflow-hidden">
+    <div className="h-screen">
       <Split
         sizes={[70, 30]}
         minSize={100}
@@ -23,7 +23,7 @@ const Home: React.FC = () => {
         <div className="w-full h-full p-4">
           <TabsComponent />
         </div>
-        <div className="w-full h-full">
+        <div className="w-full h-full fixed top-0 right-0">
           <Placeholder />
         </div>
       </Split>

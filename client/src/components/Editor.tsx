@@ -1,9 +1,10 @@
+"use client";
 import { Block, BlockNoteEditor, PartialBlock } from "@blocknote/core";
 import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
-import { FC } from "react";
+import { FC, useEffect } from "react";
 
 interface EditorProps {
     onChange: (jsonBlocks: Block[]) => Promise<void>;
@@ -18,7 +19,7 @@ const defaultBlock: PartialBlock = {
         textColor: "default",
         textAlignment: "left"
     },
-    content: [{ type: "text", text: "Begin Here!", styles: {} }],
+    content: [{ type: "text", text: "", styles: {} }],
     children: []
 };
 
@@ -27,12 +28,21 @@ const Editor: FC<EditorProps> = ({
     initialContent,
     editable,
 }) => {
-    const parsedInitialContent: PartialBlock[] = initialContent
-        ? JSON.parse(initialContent)
-        : [defaultBlock];
+
+    let content: PartialBlock[];
+
+    try {
+        content = initialContent ? JSON.parse(initialContent) as PartialBlock[] : [defaultBlock];
+        if (!Array.isArray(content) || content.length === 0) {
+            throw new Error("initialContent must be a non-empty array of blocks");
+        }
+    } catch (error) {
+        console.error("Error parsing initial content:", error);
+        content = [defaultBlock];
+    }
 
     const editor: BlockNoteEditor = useCreateBlockNote({
-        initialContent: parsedInitialContent,
+        initialContent: content,
     });
 
     if (!editor) {

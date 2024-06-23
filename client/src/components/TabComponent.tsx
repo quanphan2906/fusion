@@ -30,8 +30,9 @@ const TabsComponent: React.FC = () => {
       title: doc.data().title || 'Untitled',
       content: JSON.stringify(doc.data().content),
     }));
-    setTabs(notes.length > 0 ? notes : [{ id: '', title: 'Untitled', content: '' }]);
+    setTabs(notes.length > 0 ? notes : []);
     setLoading(false);
+    return notes;
   };
 
   useEffect(() => {
@@ -51,16 +52,17 @@ const TabsComponent: React.FC = () => {
       content: '',
     };
     const newDocRef = await addDoc(collection(db, "notes"), newTabData);
-    await fetchNotes();
-    setValue(tabs.length); // Set the value to the new tab's index
-    setOpenTabs([...openTabs, tabs.length]); // Add the new tab to the openTabs array
+    const newNotes = await fetchNotes();
+    const newIndex = newNotes.findIndex(tab => tab.id === newDocRef.id);
+    setValue(newIndex); // Set the value to the new tab's index
+    setOpenTabs([...openTabs, newIndex]); // Add the new tab to the openTabs array
   };
 
   const handleDeleteTab = async (tabId: string) => {
     await deleteDoc(doc(db, "notes", tabId));
     await fetchNotes();
     setValue(-1); // No tab selected after deletion
-    setOpenTabs(openTabs.filter(index => tabs[index].id !== tabId));
+    setOpenTabs(openTabs.filter(index => tabs[index]?.id !== tabId));
   };
 
   const handleCloseTab = (index: number) => {
@@ -113,10 +115,10 @@ const TabsComponent: React.FC = () => {
         <Tabs value={value} onChange={handleChange} aria-label="NoteDoc Tabs">
           {openTabs.map(index => (
             <Tab
-              key={tabs[index].id}
+              key={tabs[index]?.id}
               label={
                 <div className="tab-with-close">
-                  {tabs[index].title}
+                  {tabs[index]?.title}
                   <IconButton
                     size="small"
                     className="close-button"
