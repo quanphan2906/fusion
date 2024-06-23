@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Tabs, Tab, Typography } from '@mui/material';
-import QuotesComponent from '@/components/TextComponent';
+import { Typography, Box, Card, CircularProgress } from '@mui/material';
 import { fetchText } from '@/api/uploadthing/dummytxt';
+import ToneComponent from './ToneComponent';
+import LearningMethodComponent from './LearningMethodComponent';
+import OrganizationComponent from './OrganizationComponent';
+import IntentComponent from './IntentComponent';
 
 const Placeholder: React.FC = () => {
-  const [quotes, setQuotes] = useState<string[]>([]);
+  const [quotes, setQuotes] = useState<{ original: string, revised: string }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [highlight, setHighlight] = useState('');
 
   useEffect(() => {
     fetchText().then((data) => {
@@ -15,34 +17,39 @@ const Placeholder: React.FC = () => {
     });
   }, []);
 
+  const handleCardClick = (index: number) => {
+    setQuotes((prevQuotes) => prevQuotes.filter((_, i) => i !== index));
+  };
+
   return (
     <div className="flex flex-col h-full bg-gray-200">
-      <div className="p-4">
-        <input
-          type="text"
-          placeholder="Search..."
-          className="w-full p-2 border border-gray-300 rounded"
-          onChange={(e) => setHighlight(e.target.value)}
-        />
-      </div>
-      <div className="flex-1 flex items-center justify-center overflow-auto p-4">
-        {loading ? (
-          <Typography variant="h6">Loading quotes...</Typography>
-        ) : (
-          <QuotesComponent quotes={quotes} highlight={highlight} />
-        )}
-      </div>
+      <h1 className="p-5 w-full flex justify-center text-center text-2xl">Suggestion</h1>
       <div className="w-full border-t border-gray-300">
-        <Tabs
-          value={0} 
-          aria-label="Placeholder Tabs"
-          variant="fullWidth"
-          centered
-        >
-          <Tab label="Tab 1" />
-          <Tab label="Tab 2" />
-          <Tab label="Tab 3" />
-        </Tabs>
+        {loading ? (
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
+            <CircularProgress />
+          </Box>
+        ) : (
+          quotes.map((quote, index) => (
+            <Card 
+              key={index} 
+              className="m-2 p-2" 
+              onClick={() => handleCardClick(index)} 
+              sx={{ cursor: 'pointer' }}
+            >
+              <Typography variant="body1"><strong>Original:</strong> {quote.original}</Typography>
+              <Typography variant="body1"><strong>Revised:</strong> {quote.revised}</Typography>
+            </Card>
+          ))
+        )}
+        {!loading && (
+          <>
+            <ToneComponent />
+            <LearningMethodComponent />
+            <OrganizationComponent />
+            <IntentComponent />
+          </>
+        )}
       </div>
     </div>
   );
