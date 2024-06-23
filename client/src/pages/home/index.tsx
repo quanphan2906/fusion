@@ -20,7 +20,7 @@ const Home: React.FC = () => {
         cursor="col-resize"
         className="flex w-full h-full"
       >
-        <div className="w-full h-full p-4">
+        <div className="w-full h-full">
           <TabsComponent />
         </div>
         <div className="w-full h-full">
