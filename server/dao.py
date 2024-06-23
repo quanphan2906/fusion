@@ -25,10 +25,10 @@ index = pinecone.Index(index_name)
 
 
 # Function to save embeddings to Pinecone
-def _save_embeddings_to_pinecone(texts, embeddings):
+def _save_embeddings_to_pinecone(texts, titles, embeddings):
     items = [
-        {"id": str(i), "values": embedding.tolist(), "metadata": {"text": text}}
-        for i, (text, embedding) in enumerate(zip(texts, embeddings))
+        {"id": str(i), "values": embedding.tolist(), "metadata": {"text": text, "title": title} }
+        for i, (text, title, embedding) in enumerate(zip(texts, titles, embeddings))
     ]
     index.upsert(items)
 
@@ -38,11 +38,13 @@ def save_text_to_db(texts):
     embeddings = _generate_embeddings(texts)
 
     # Save embeddings to Pinecone
-    _save_embeddings_to_pinecone(texts, embeddings)
+    _save_embeddings_to_pinecone(texts, titles, embeddings)
 
 
 def query_similar_texts(text: str, top_k=5):
     embeddings = _generate_embeddings([text])
     results = index.query(queries=[embeddings], top_k=top_k)
-    similar_texts = [match["metadata"]["text"] for match in results["matches"]]
+    similar_texts = [match["metadata"]["text"]["title"] for match in results["matches"]]
     return similar_texts
+
+
