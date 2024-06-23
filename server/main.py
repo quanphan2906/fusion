@@ -15,7 +15,7 @@ def save_text():
     text = data.get("text", None)
     if text:
         similar_text = dao.query_similar_texts(text)
-        return jsonify({"result": similar_text}), 200
+        return jsonify({"results": similar_text}), 200
     else:
         return jsonify({"message": "No text provided"}), 400
 

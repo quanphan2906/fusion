@@ -3,7 +3,7 @@
 import TextareaAutoSize from "react-textarea-autosize";
 import dynamic from "next/dynamic";
 import { useMemo, useState, useEffect } from "react";
-import { Block, BlockNoteEditor } from "@blocknote/core";
+import { Block, BlockNoteEditor, PartialBlock } from "@blocknote/core";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "../../firebaseConfig";
 import axios from "axios";
@@ -15,10 +15,22 @@ import { useCreateBlockNote } from "@blocknote/react";
 interface NoteDocProps {
 	noteId: string;
 	onTitleChange: (title: string) => void;
-	onContentChange: (content: string) => void;
+	onContentChange: (content: Block[]) => void;
 	initialTitle: string;
-	initialContent: string;
+	initialContent: Block[];
+	setSuggestions: React.Dispatch<React.SetStateAction<String[]>>;
 }
+
+const defaultBlock: PartialBlock = {
+	type: "paragraph",
+	props: {
+		backgroundColor: "default",
+		textColor: "default",
+		textAlignment: "left",
+	},
+	content: [{ type: "text", text: "", styles: {} }],
+	children: [],
+};
 
 export default function NoteDoc({
 	noteId,
@@ -26,11 +38,10 @@ export default function NoteDoc({
 	onContentChange,
 	initialTitle,
 	initialContent,
+	setSuggestions,
 }: NoteDocProps) {
-	const [title, setTitle] = useState(initialTitle);
-	const [content, setContent] = useState<Block[]>([]);
-	const debouncedTitle = useDebounce(title, 3000);
-	const debouncedContent = useDebounce(content, 3000);
+	const debouncedTitle = useDebounce(initialTitle, 3000);
+	const debouncedContent = useDebounce(initialContent, 3000);
 	const [hasContent, setHasContent] = useState(!!initialContent);
 
 	const Editor = useMemo(
@@ -39,7 +50,7 @@ export default function NoteDoc({
 	);
 
 	const editor: BlockNoteEditor = useCreateBlockNote({
-		initialContent: content,
+		initialContent: initialContent || [defaultBlock],
 	});
 
 	const extractTextFromBlocks = (blocks: Block[]): string => {
@@ -118,11 +129,17 @@ export default function NoteDoc({
 			const response = await axios.post(
 				"http://127.0.0.1:5000/query_text",
 				{
-					title: title,
+					title: initialTitle,
 					text: currentBlock,
 				}
 			);
-			console.log(response.data);
+
+			if (response.status == 400) {
+				console.log("Error 400: ", response.data.message);
+				return;
+			}
+
+			setSuggestions(response.data.results);
 		} catch (e) {
 			console.error("Error sending suggestion request: ", e);
 		}
@@ -146,10 +163,12 @@ export default function NoteDoc({
 
 	const handleChange = async (jsonBlocks: Block[]) => {
 		try {
-			setContent(jsonBlocks);
 			setHasContent(jsonBlocks.length > 0);
-			await setDoc(getNoteDocRef(noteId), { title, content: jsonBlocks });
-			onContentChange(JSON.stringify(jsonBlocks)); // Notify TabsComponent about the change
+			await setDoc(getNoteDocRef(noteId), {
+				initialTitle,
+				content: jsonBlocks,
+			});
+			onContentChange(jsonBlocks); // Notify TabsComponent about the change
 		} catch (e) {
 			console.error("Error saving document: ", e);
 		}
@@ -159,10 +178,12 @@ export default function NoteDoc({
 		event: React.ChangeEvent<HTMLTextAreaElement>
 	) => {
 		const newTitle = event.target.value;
-		setTitle(newTitle);
 		onTitleChange(newTitle);
 		try {
-			await setDoc(getNoteDocRef(noteId), { title: newTitle, content });
+			await setDoc(getNoteDocRef(noteId), {
+				title: newTitle,
+				content: JSON.stringify(initialContent),
+			});
 		} catch (e) {
 			console.error("Error saving title: ", e);
 		}
@@ -175,7 +196,7 @@ export default function NoteDoc({
 					<TextareaAutoSize
 						placeholder="Untitled"
 						className="w-full resize-none appearance-none overflow-hidden bg-transparent text-5xl font-bold focus:outline-none"
-						value={title}
+						value={initialTitle}
 						onChange={handleTitleChange}
 					/>
 				</div>
@@ -192,12 +213,7 @@ export default function NoteDoc({
 					<SyncIcon />
 				</IconButton>
 			</div>
-			<Editor
-				onChange={handleChange}
-				initialContent={initialContent}
-				editable={true}
-				editor={editor}
-			/>
+			<Editor onChange={handleChange} editable={true} editor={editor} />
 		</main>
 	);
 }
