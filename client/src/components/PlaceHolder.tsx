@@ -1,17 +1,11 @@
-import React, { useState } from "react";
-import { Typography, Box, Card, CircularProgress } from "@mui/material";
-import ToneComponent from "./ToneComponent";
-import LearningMethodComponent from "./LearningMethodComponent";
-import OrganizationComponent from "./OrganizationComponent";
-import IntentComponent from "./IntentComponent";
+import React from "react";
+import { Typography, Card } from "@mui/material";
 
 interface PlaceHolderProps {
 	suggestions: String[];
 }
 
 const Placeholder = ({ suggestions }: PlaceHolderProps) => {
-	const [loading, setLoading] = useState(true);
-
 	const handleCardClick = (index: number) => {
 		// setQuotes((prevQuotes) => prevQuotes.filter((_, i) => i !== index));
 	};
@@ -22,35 +16,16 @@ const Placeholder = ({ suggestions }: PlaceHolderProps) => {
 				Suggestion
 			</h1>
 			<div className="w-full border-t border-gray-300">
-				{loading ? (
-					<Box
-						display="flex"
-						justifyContent="center"
-						alignItems="center"
-						minHeight="50vh"
+				{suggestions.map((quote, index) => (
+					<Card
+						key={index}
+						className="m-2 p-2"
+						onClick={() => handleCardClick(index)}
+						sx={{ cursor: "pointer" }}
 					>
-						<CircularProgress />
-					</Box>
-				) : (
-					suggestions.map((quote, index) => (
-						<Card
-							key={index}
-							className="m-2 p-2"
-							onClick={() => handleCardClick(index)}
-							sx={{ cursor: "pointer" }}
-						>
-							<Typography variant="body1">{quote}</Typography>
-						</Card>
-					))
-				)}
-				{!loading && (
-					<>
-						<ToneComponent />
-						<LearningMethodComponent />
-						<OrganizationComponent />
-						<IntentComponent />
-					</>
-				)}
+						<Typography variant="body1">{quote}</Typography>
+					</Card>
+				))}
 			</div>
 		</div>
 	);

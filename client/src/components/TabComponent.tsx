@@ -39,7 +39,7 @@ const TabsComponent = ({ setSuggestions }: TabsComponentProps) => {
 		const notes = querySnapshot.docs.map((doc) => ({
 			id: doc.id,
 			title: doc.data().title || "Untitled",
-			content: JSON.parse(doc.data().content) as Block[],
+			content: doc.data().content as Block[],
 		}));
 		setTabs(notes.length > 0 ? notes : []);
 		setLoading(false);
