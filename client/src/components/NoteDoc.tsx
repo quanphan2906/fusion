@@ -7,7 +7,14 @@ import { Block } from "@blocknote/core";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 
-export default function NoteDoc({ noteId }: { noteId: string }) {
+
+interface NoteDocProps {
+    noteId: string;
+    onTitleChange: (title: string) => void;
+}
+
+
+export default function NoteDoc({ noteId, onTitleChange }: NoteDocProps) {
     const Editor = useMemo(
         () => dynamic(() => import('./Editor'), {ssr: false}),
         []
@@ -17,12 +24,14 @@ export default function NoteDoc({ noteId }: { noteId: string }) {
 
     const handleChange = async (jsonBlocks: Block[]) => {
         try {
-            console.log("setDocstart");
             await setDoc(getNoteDocRef(noteId), { content: jsonBlocks });
-            console.log("setDocend");
         } catch (e) {
             console.error("Error saving document: ", e);
         }
+    };
+
+    const handleTitleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+        onTitleChange(event.target.value);
     };
 
     const initialContent = '[{"type":"paragraph","children":[{"text":"Hello, world!"}]}]';
@@ -33,6 +42,7 @@ export default function NoteDoc({ noteId }: { noteId: string }) {
                 <TextareaAutoSize
                     placeholder="Untitled"
                     className="w-full resize-none appearance-none overflow-hidden bg-transparent text-5xl font-bold focus:outline-none"
+                    onChange={handleTitleChange}
                 />
             </div>
             <Editor

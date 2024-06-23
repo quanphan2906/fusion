@@ -24,18 +24,18 @@ const Editor: FC<EditorProps> = ({
 
     if (editor === undefined) {
         return "Loading content...";
-      }
+    }
 
     return (
         <div className="-mx-[-48px] my-4">
             <BlockNoteView
-            editor={editor}
-            editable={editable}
-            theme='light'
-            onChange={() => {
-                onChange(editor.document);
-            }}
-        />
+                editor={editor}
+                editable={editable}
+                theme='light'
+                onChange={() => {
+                    onChange(editor.document);
+                }}
+            />
         </div>
     );
 };
