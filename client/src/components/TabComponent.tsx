@@ -6,11 +6,11 @@ import MenuIcon from '@mui/icons-material/Menu';
 import NoteDoc from './NoteDoc';
 import TabPanel from './TabPanel';
 import DrawerComponent from './DrawerComponent';
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, addDoc } from "firebase/firestore";
 import { db } from "../../firebaseConfig";
 
 const TabsComponent: React.FC = () => {
-  const [tabs, setTabs] = useState<{ id: number, title: string, content: string }[]>([]);
+  const [tabs, setTabs] = useState<{ id: string, title: string, content: string }[]>([]);
   const [value, setValue] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -18,8 +18,8 @@ const TabsComponent: React.FC = () => {
   useEffect(() => {
     const fetchNotes = async () => {
       const querySnapshot = await getDocs(collection(db, "notes"));
-      const notes = querySnapshot.docs.map((doc, index) => ({
-        id: index,
+      const notes = querySnapshot.docs.map(doc => ({
+        id: doc.id,
         title: doc.data().title || 'Untitled',
         content: JSON.stringify(doc.data().content),
       }));
@@ -34,8 +34,13 @@ const TabsComponent: React.FC = () => {
     setValue(newValue);
   };
 
-  const handleAddTab = () => {
-    const newTab = { id: tabs.length, title: `Untitled`, content: '' };
+  const handleAddTab = async () => {
+    const newTabData = {
+      title: `Untitled`,
+      content: '',
+    };
+    const newDocRef = await addDoc(collection(db, "notes"), newTabData);
+    const newTab = { id: newDocRef.id, ...newTabData };
     setTabs([...tabs, newTab]);
     setValue(tabs.length);
   };
@@ -98,7 +103,7 @@ const TabsComponent: React.FC = () => {
       {tabs.map((tab, index) => (
         <TabPanel key={tab.id} value={value} index={index}>
           <NoteDoc
-            noteId={`note-${tab.id}`}
+            noteId={tab.id}
             onTitleChange={(title) => handleTitleChange(index, title)}
             initialTitle={tab.title}
             initialContent={tab.content}
