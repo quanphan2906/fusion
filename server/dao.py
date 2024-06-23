@@ -55,45 +55,46 @@ def query_similar_texts(text: str, top_k=5):
 
 
 def upsert_doc(
-    old_title: str, new_title: str = None, new_blocks: Union[list[str], None] = []
+    old_title: str = None,
+    new_title: str = None,
+    new_blocks: Union[list[str], None] = [],
 ):
-    if old_title is None:
-        return
 
     # there's nothing to update
     if new_title is None and (new_blocks is None or len(new_blocks) == 0):
         return
 
-    # Hacky way to query with metadata only
-    # https://community.pinecone.io/t/is-there-a-way-to-query-all-the-vectors-and-or-metadata-from-a-namespace/797/7
-    results = index.query(
-        vector=[0 for _ in range(VECTOR_DIMENSIONS)],
-        top_k=DUMMY_TOPK_TO_QUERY_WITH_METADATA,
-        include_metadata=True,
-        filter={"title": old_title},
-    )
+    if old_title is not None:
+        # Hacky way to query with metadata only
+        # https://community.pinecone.io/t/is-there-a-way-to-query-all-the-vectors-and-or-metadata-from-a-namespace/797/7
+        results = index.query(
+            vector=[0 for _ in range(VECTOR_DIMENSIONS)],
+            top_k=DUMMY_TOPK_TO_QUERY_WITH_METADATA,
+            include_metadata=True,
+            filter={"title": old_title},
+        )
 
-    if len(results["matches"]) == 0:
-        return
+        if len(results["matches"]) == 0:
+            return
 
-    # if only the title was changed
-    # we want to upsert the title of the blocks instead of
-    # deleting the blocks and creating new ones
-    if new_blocks is None or len(new_blocks) == 0:
-        items = [
-            {
-                "id": match["id"],
-                "values": match["value"],
-                "metadata": {"text": match["metadata"]["text"], "title": new_title},
-            }
-            for match in results["matches"]
-        ]
-        index.upsert(items)
-        return
+        # if only the title was changed
+        # we want to upsert the title of the blocks instead of
+        # deleting the blocks and creating new ones
+        if new_blocks is None or len(new_blocks) == 0:
+            items = [
+                {
+                    "id": match["id"],
+                    "values": match["value"],
+                    "metadata": {"text": match["metadata"]["text"], "title": new_title},
+                }
+                for match in results["matches"]
+            ]
+            index.upsert(items)
+            return
 
-    # the blocks changed, so we have to delete the old blocks and create new ones
-    ids_to_delete = [match["id"] for match in results["matches"]]
-    index.delete(ids=ids_to_delete)
+        # the blocks changed, so we have to delete the old blocks and create new ones
+        ids_to_delete = [match["id"] for match in results["matches"]]
+        index.delete(ids=ids_to_delete)
 
     if new_title and new_blocks:
         titles = [new_title] * len(new_blocks)

@@ -37,12 +37,9 @@ def upsert_doc():
     new_title = data.get("new_title")
     new_blocks = data.get("new_blocks")
 
-    if old_title is None:
-        return jsonify({"message": "old_title is required"}), 400
-
     try:
-        res = dao.upsert_doc(old_title, new_title, new_blocks)
-        return jsonify({res}), 200
+        dao.upsert_doc(old_title, new_title, new_blocks)
+        return jsonify({}), 200
     except Exception as e:
         return jsonify({"message": e}), 400
 
