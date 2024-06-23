@@ -7,7 +7,7 @@ import 'tailwindcss/tailwind.css'; // Ensure Tailwind CSS is imported
 const Home: React.FC = () => {
 
   return (
-    <div className="h-screen">
+    <div className="h-screen overflow-hidden">
       <Split
         sizes={[70, 30]}
         minSize={100}
