@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 import TextareaAutoSize from "react-textarea-autosize";
 import dynamic from 'next/dynamic';
