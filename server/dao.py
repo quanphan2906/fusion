@@ -8,7 +8,7 @@ from typing import Union
 pinecone = Pinecone(api_key=pinecone_api_key)
 VECTOR_DIMENSIONS = 384
 DUMMY_TOPK_TO_QUERY_WITH_METADATA = 10000
-INDEX_NAME = "text-similarity"
+INDEX_NAME = "text-similarity-2"
 index = pinecone.Index(INDEX_NAME)
 
 # Initialize the text embedding model
@@ -49,7 +49,8 @@ def save_text_to_db(titles, texts):
 
 def query_similar_texts(text: str, top_k=5):
     embeddings = _generate_embeddings([text])
-    results = index.query(vector=embeddings[0], top_k=top_k)
+    results = index.query(vector=embeddings[0], top_k=top_k, include_metadata=True)
+    print(results)
     similar_texts = [
         {"text": match["metadata"].get("text"), "title": match["metadata"].get("title")}
         for match in results["matches"]

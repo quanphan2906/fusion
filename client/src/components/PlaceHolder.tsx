@@ -2,7 +2,7 @@ import React from "react";
 import { Typography, Card } from "@mui/material";
 
 interface PlaceHolderProps {
-	suggestions: String[];
+	suggestions: { title: string; text: string }[];
 }
 
 const Placeholder = ({ suggestions }: PlaceHolderProps) => {
@@ -16,14 +16,15 @@ const Placeholder = ({ suggestions }: PlaceHolderProps) => {
 				Suggestion
 			</h1>
 			<div className="w-full border-t border-gray-300">
-				{suggestions.map((quote, index) => (
+				{suggestions.map(({ title, text }, index) => (
 					<Card
 						key={index}
 						className="m-2 p-2"
 						onClick={() => handleCardClick(index)}
 						sx={{ cursor: "pointer" }}
 					>
-						<Typography variant="body1">{quote}</Typography>
+						<Typography variant="body1">{title}</Typography>
+						<Typography variant="body2">{text}</Typography>
 					</Card>
 				))}
 			</div>
