@@ -11,18 +11,31 @@ interface EditorProps {
     editable?: boolean;
 }
 
+const defaultBlock: PartialBlock = {
+    type: "paragraph",
+    props: {
+        backgroundColor: "default",
+        textColor: "default",
+        textAlignment: "left"
+    },
+    content: [{ type: "text", text: "Begin Here!", styles: {} }],
+    children: []
+};
+
 const Editor: FC<EditorProps> = ({
     onChange,
     initialContent,
     editable,
 }) => {
+    const parsedInitialContent: PartialBlock[] = initialContent
+        ? JSON.parse(initialContent)
+        : [defaultBlock];
+
     const editor: BlockNoteEditor = useCreateBlockNote({
-        initialContent: initialContent 
-        ? (JSON.parse(initialContent) as PartialBlock[]) 
-        : undefined,
+        initialContent: parsedInitialContent,
     });
 
-    if (editor === undefined) {
+    if (!editor) {
         return "Loading content...";
     }
 
@@ -31,7 +44,7 @@ const Editor: FC<EditorProps> = ({
             <BlockNoteView
                 editor={editor}
                 editable={editable}
-                theme='light'
+                theme="light"
                 onChange={() => {
                     onChange(editor.document);
                 }}

@@ -22,6 +22,7 @@ export default function NoteDoc({ noteId, onTitleChange, onContentChange, initia
     const [content, setContent] = useState<Block[]>([]);
     const debouncedTitle = useDebounce(title, 3000);
     const debouncedContent = useDebounce(content, 3000);
+    const [hasContent, setHasContent] = useState(!!initialContent);
 
     const Editor = useMemo(
         () => dynamic(() => import('./Editor'), { ssr: false }),
@@ -58,12 +59,12 @@ export default function NoteDoc({ noteId, onTitleChange, onContentChange, initia
         return texts;
     };
 
-    const handlePostRequest = async (title: string, jsonBlocks: Block[]) => {
-        const texts = extractTextFromBlocks(jsonBlocks);
+    const handlePostRequest = async (oldTitle: string, newTitle?: string, newBlocks?: Block[]) => {
         try {
-            const response = await axios.post("http://127.0.0.1:5000/process_text", {
-                title: title,
-                texts: texts
+            const response = await axios.post("http://127.0.0.1:5000/upsert-doc", {
+                old_title: oldTitle,
+                new_title: newTitle,
+                new_blocks: newBlocks
             });
             console.log(response.data);
         } catch (e) {
@@ -72,8 +73,12 @@ export default function NoteDoc({ noteId, onTitleChange, onContentChange, initia
     };
 
     useEffect(() => {
-        if (debouncedContent.length > 0 || debouncedTitle) {
-            handlePostRequest(debouncedTitle, debouncedContent);
+        if (hasContent) {
+            if (debouncedTitle !== initialTitle) {
+                handlePostRequest(initialTitle, debouncedTitle, debouncedContent.length ? debouncedContent : undefined);
+            } else if (debouncedContent.length > 0) {
+                handlePostRequest(initialTitle, undefined, debouncedContent);
+            }
         }
     }, [debouncedContent, debouncedTitle]);
 
@@ -82,6 +87,7 @@ export default function NoteDoc({ noteId, onTitleChange, onContentChange, initia
     const handleChange = async (jsonBlocks: Block[]) => {
         try {
             setContent(jsonBlocks);
+            setHasContent(jsonBlocks.length > 0);
             await setDoc(getNoteDocRef(noteId), { title, content: jsonBlocks });
             onContentChange(JSON.stringify(jsonBlocks)); // Notify TabsComponent about the change
         } catch (e) {

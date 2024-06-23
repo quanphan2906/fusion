@@ -136,7 +136,7 @@ const TabsComponent: React.FC = () => {
       </Box>
       {value === -1 ? (
         <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
-          <Typography variant="h6" color="textSecondary">
+          <Typography variant="h4" color="textSecondary" style={{ marginBottom: "150px" }}>
             Open or Create a Note +
           </Typography>
         </Box>
