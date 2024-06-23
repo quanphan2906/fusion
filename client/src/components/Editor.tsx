@@ -1,13 +1,12 @@
-import { BlockNoteEditor, PartialBlock } from "@blocknote/core";
+import { Block, BlockNoteEditor, PartialBlock } from "@blocknote/core";
 import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import { FC } from "react";
-import { uploadFiles } from "../../utils/uploadthing";
 
 interface EditorProps {
-    onChange?: () => void;
+    onChange: (jsonBlocks: Block[]) => Promise<void>;
     initialContent?: string;
     editable?: boolean;
 }
@@ -21,11 +20,11 @@ const Editor: FC<EditorProps> = ({
         initialContent: initialContent 
         ? (JSON.parse(initialContent) as PartialBlock[]) 
         : undefined,
-        uploadFile: async (file: File) => {
-            const [res] = await uploadFiles('imageUploader', {files: [file]})
-            return res.url;
-        }
     });
+
+    if (editor === undefined) {
+        return "Loading content...";
+      }
 
     return (
         <div className="-mx-[-48px] my-4">
@@ -33,7 +32,9 @@ const Editor: FC<EditorProps> = ({
             editor={editor}
             editable={editable}
             theme='light'
-            onChange={onChange}
+            onChange={() => {
+                onChange(editor.document);
+            }}
         />
         </div>
     );

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Drawer, List, ListItem, ListItemText, ListItemIcon, Box, Button } from '@mui/material';
+import { Drawer, List, ListItemButton, ListItemText, ListItemIcon, Box, Button } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import SearchIcon from '@mui/icons-material/Search';
 import InfoIcon from '@mui/icons-material/Info';
@@ -18,24 +18,24 @@ const DrawerComponent: React.FC<DrawerComponentProps> = ({ open, onClose }) => {
         sx={{ width: '20vw', display: 'flex', flexDirection: 'column', height: '100%' }}
       >
         <List>
-          <ListItem button>
+          <ListItemButton>
             <ListItemIcon>
               <HomeIcon />
             </ListItemIcon>
             <ListItemText primary="Home" />
-          </ListItem>
-          <ListItem button>
+          </ListItemButton>
+          <ListItemButton>
             <ListItemIcon>
               <SearchIcon />
             </ListItemIcon>
             <ListItemText primary="Search" />
-          </ListItem>
-          <ListItem button>
+          </ListItemButton>
+          <ListItemButton>
             <ListItemIcon>
               <InfoIcon />
             </ListItemIcon>
             <ListItemText primary="Info" />
-          </ListItem>
+          </ListItemButton>
         </List>
         <Box sx={{ flexGrow: 1 }} /> 
         <Box p={2}>
