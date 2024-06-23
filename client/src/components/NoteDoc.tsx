@@ -96,10 +96,10 @@ export default function NoteDoc({
 		return texts.join("");
 	};
 
-	const getCurrentBlock = () => {
+	const getCurrentContent = () => {
 		const textCursorPosition = editor.getTextCursorPosition();
 		const block = textCursorPosition.block;
-		return block;
+		return block.content;
 	};
 
 	const handlePostRequest = async (
@@ -126,12 +126,16 @@ export default function NoteDoc({
 
 	const handleGetSuggestion = async () => {
 		try {
-			const currentBlock = getCurrentBlock();
+			const currentContent = getCurrentContent();
+
+			if (currentContent === undefined) return;
+			const currentContentCasted = currentContent as Array<any>;
+
 			const response = await axios.post(
 				"http://127.0.0.1:5000/query_text",
 				{
 					title: sourceTitle,
-					text: currentBlock,
+					text: currentContentCasted[0]["text"] as string,
 				}
 			);
 
@@ -139,6 +143,8 @@ export default function NoteDoc({
 				console.log("Error 400: ", response.data.message);
 				return;
 			}
+
+			console.log("suggestions", response.data.results);
 
 			setSuggestions(response.data.results);
 		} catch (e) {

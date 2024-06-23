@@ -13,6 +13,7 @@ CORS(app)
 def save_text():
     data = request.get_json()
     text = data.get("text", None)
+    print("Text", text)
     if text:
         similar_text = dao.query_similar_texts(text)
         return jsonify({"results": similar_text}), 200

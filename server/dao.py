@@ -19,7 +19,10 @@ _embedding_pipeline = pipeline(
 
 # Function to generate embeddings
 def _generate_embeddings(texts: list[str]):
-    embeddings = [np.mean(_embedding_pipeline(text)[0], axis=0) for text in texts]
+    embeddings = [
+        np.mean(_embedding_pipeline(text)[0], axis=0).tolist() for text in texts
+    ]
+    print(embeddings)
     return embeddings
 
 
@@ -46,9 +49,9 @@ def save_text_to_db(titles, texts):
 
 def query_similar_texts(text: str, top_k=5):
     embeddings = _generate_embeddings([text])
-    results = index.query(queries=[embeddings], top_k=top_k)
+    results = index.query(vector=embeddings[0], top_k=top_k)
     similar_texts = [
-        {"text": match["metadata"]["text"], "title": match["metadata"]["title"]}
+        {"text": match["metadata"].get("text"), "title": match["metadata"].get("title")}
         for match in results["matches"]
     ]
     return similar_texts
