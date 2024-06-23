@@ -12,9 +12,13 @@ CORS(app)
 @app.route("/process_text", methods=["POST"])
 def process_text():
     data = request.get_json()
-    if "texts" in data:
-        texts = data["texts"]
-        save_text_to_db(texts)
+    title = data.get("title", None)
+    texts = data.get("texts", None)
+
+    titles = [title for i in range(len(texts))]
+
+    if title and texts:
+        save_text_to_db(titles, texts)
         return jsonify({}), 200
     else:
         return jsonify({"message": "No text provided"}), 400
