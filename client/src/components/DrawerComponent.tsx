@@ -6,6 +6,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { TabData } from './TabComponent';
 import ArticleIcon from '@mui/icons-material/Article';
+import Link from 'next/link';
 
 interface DrawerComponentProps {
   open: boolean;
@@ -23,24 +24,30 @@ const DrawerComponent: React.FC<DrawerComponentProps> = ({ open, onClose, notes,
         sx={{ width: '20vw', display: 'flex', flexDirection: 'column', height: '100%' }}
       >
         <List>
+        <Link href="/" passHref>
           <ListItemButton>
             <ListItemIcon>
               <HomeIcon />
             </ListItemIcon>
             <ListItemText primary="Home" />
           </ListItemButton>
+        </Link>
+        <Link href="/" passHref>
           <ListItemButton>
             <ListItemIcon>
               <SearchIcon />
             </ListItemIcon>
             <ListItemText primary="Search" />
           </ListItemButton>
+        </Link>
+        <Link href="/" passHref>
           <ListItemButton>
             <ListItemIcon>
               <InfoIcon />
             </ListItemIcon>
             <ListItemText primary="Info" />
           </ListItemButton>
+        </Link>
         </List>
         <List>
           <div style={{ display: 'inline-flex'}}>
