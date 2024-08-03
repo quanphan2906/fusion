@@ -1,1 +1,1 @@
-This project has been rebooted and moved here: https://github.com/quanphan2906/note-fusion
+After the hackathon, this project has been rebooted and moved to a new home: https://github.com/quanphan2906/note-fusion. Starting from scratch makes it easier to include better engineering practices that lay the foundation for future development.
